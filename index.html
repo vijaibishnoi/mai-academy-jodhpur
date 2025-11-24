@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MAI Academy Jodhpur – Voice Quiz</title>
+<style>
+:root{
+  --grad:linear-gradient(135deg,#00d7ff 0%,#0099ff 100%);
+  --glow:0 0 15px #00d7ff,0 0 30px #00d7ff;
+  --glass:rgba(255,255,255,.07);
+  --dark:#0c162d;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;background:var(--dark);color:#fff}
+body{display:flex;flex-direction:column}
+
+.intro{position:fixed;inset:0;background:#000;display:grid;place-content:center;z-index:1000;animation:fadeOut 1s ease 3.5s forwards}
+.intro-logo{width:35vmin;height:35vmin;background:url(https://i.ibb.co/nsLHBDmh/mai-academy.png) center/cover;border-radius:1rem;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{transform:scale(1.05);box-shadow:var(--glow)}}
+@keyframes fadeOut{to{opacity:0;visibility:hidden}}
+
+.header{display:flex;justify-content:space-between;align-items:center;padding:1rem;background:var(--glass);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0}
+.header h1{font-size:clamp(1.2rem,4vw,2rem);background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo-small{width:clamp(40px,8vw,50px);height:clamp(40px,8vw,50px);background:url(https://i.ibb.co/nsLHBDmh/mai-academy.png) center/cover;border-radius:6px;opacity:0;animation:slideIn .5s ease 4s forwards}
+@keyframes slideIn{from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+.start-screen{width:100%;max-width:600px;margin:0 auto;padding:clamp(1rem,4vw,2rem);text-align:center;overflow-y:auto;flex:1 1 auto;display:flex;flex-direction:column;justify-content:center}
+.start-screen h2{font-size:clamp(1.5rem,5vw,2.5rem);margin:clamp(4rem,12vw,6rem) 0 clamp(1rem,4vw,1.5rem)}
+
+.glass-card{background:var(--glass);border-radius:20px;padding:clamp(1rem,4vw,1.5rem);margin-bottom:clamp(1rem,4vw,1.5rem);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(12px);box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.preset-btn{font-size:clamp(1rem,4vw,1.3rem);width:100%;padding:clamp(.8rem,3vw,1rem);border:none;border-radius:12px;background:var(--grad);color:#111;font-weight:bold;cursor:pointer;transition:.3s;box-shadow:var(--glow);margin-bottom:clamp(.5rem,2vw,1rem)}
+.preset-btn:hover{transform:translateY(-3px) scale(1.02)}
+
+.drop-zone{border:2px dashed rgba(0,217,255,.4);border-radius:12px;padding:clamp(1rem,3vw,1.2rem);cursor:pointer;transition:.3s;font-size:clamp(.8rem,2.5vw,.9rem);margin-top:.5rem}
+.drop-zone:hover{border-color:#00d7ff;background:rgba(0,217,255,.05)}
+.drop-zone.active{border-color:#00ffcc;background:rgba(0,255,204,.1)}
+.json-preview{width:100%;height:clamp(70px,20vw,90px);margin-top:.5rem;border-radius:6px;border:none;padding:.5rem;font-family:monospace;font-size:clamp(.7rem,2vw,.75rem);resize:vertical;background:#111;color:#00ffcc}
+#jsonStatus{font-size:clamp(.7rem,2vw,.8rem);margin-top:.25rem}
+
+.switches{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:clamp(.5rem,2vw,1rem);font-size:clamp(.8rem,2.5vw,.9rem)}
+.switch-label{display:flex;align-items:center;justify-content:space-between}
+.switch{position:relative;width:clamp(40px,8vw,46px);height:clamp(20px,5vw,24px);background:#444;border-radius:12px;cursor:pointer}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;border-radius:12px;transition:.3s}
+.slider:before{content:"";position:absolute;height:clamp(12px,3vw,16px);width:clamp(12px,3vw,16px);left:clamp(3px,1vw,4px);bottom:clamp(3px,1vw,4px);background:#fff;border-radius:50%;transition:.3s}
+input:checked+.slider{background:var(--grad)}
+input:checked+.slider:before{transform:translateX(clamp(16px,4vw,22px))}
+
+.start-btn-container{margin:clamp(1rem,4vw,1.5rem) 0 clamp(4rem,12vw,6rem)}
+#quizScreen{display:none;width:100%;flex:1 1 auto;overflow-y:auto;padding:clamp(1rem,4vw,2rem)}
+
+.timer-ring{position:relative;width:clamp(120px,20vw,140px);height:clamp(120px,20vw,140px);margin:clamp(.5rem,2vw,1rem) auto}
+svg{transform:rotate(-90deg)} circle{fill:none;stroke-width:clamp(6px,1.5vw,8px);stroke-linecap:round}
+.bg{stroke:rgba(255,255,255,.1)} .progress{stroke:url(#gradTimer);transition:stroke-dashoffset 1s linear}
+.timer-text{position:absolute;inset:0;display:grid;place-content:center;font-size:clamp(1.8rem,5vw,2.5rem);font-weight:bold;text-shadow:0 0 10px #00d7ff}
+
+.q-box{background:var(--glass);border-radius:clamp(12px,3vw,20px);padding:clamp(1rem,3vw,2rem);margin-bottom:clamp(1rem,3vw,2rem);width:100%;text-align:center;border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(12px)}
+.q-text{font-size:clamp(1rem,4vw,1.8rem);line-height:1.3;margin-bottom:clamp(.5rem,2vw,1rem);text-shadow:0 0 8px rgba(255,255,255,.2)}
+.explanation{font-size:clamp(.8rem,2.5vw,1.2rem);padding:clamp(.8rem,2vw,1.2rem);border-radius:clamp(8px,2vw,10px);margin-top:clamp(.5rem,2vw,1rem)}
+.explanation.correct{background:rgba(0,255,204,.1);border:1px solid #00ffcc;color:#00ffcc;text-shadow:0 0 5px #00ffcc}
+.explanation.incorrect{background:rgba(255,107,107,.1);border:1px solid #ff6b6b;color:#ff6b6b;text-shadow:0 0 5px #ff6b6b}
+
+.options{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(.8rem,2vw,1.2rem);width:100%;margin-bottom:clamp(1rem,3vw,2rem)}
+.opt-btn{position:relative;background:linear-gradient(135deg,rgba(0,217,255,.15) 0%,rgba(0,153,255,.15) 100%);border:2px solid rgba(0,217,255,.3);border-radius:clamp(8px,2vw,12px);padding:clamp(.8rem,2.5vw,1.5rem);font-size:clamp(.8rem,2.5vw,1.3rem);color:#fff;cursor:pointer;transition:.3s;overflow:hidden}
+.opt-btn:hover:not(.disabled){transform:translateY(-3px) scale(1.02);box-shadow:0 8px 25px rgba(0,217,255,.4);border-color:rgba(0,217,255,.6)}
+.opt-btn.correct{background:#00ff9d;border-color:#00ff9d;animation:correctPulse .6s}
+.opt-btn.incorrect{background:#ff6b6b;border-color:#ff6b6b;animation:shake .5s}
+.opt-btn.disabled{cursor:not-allowed;opacity:.4}
+@keyframes correctPulse{50%{transform:scale(1.03)}}
+@keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+
+.mic-status{margin-top:clamp(.5rem,2vw,1rem);font-size:clamp(.8rem,2.5vw,1rem);height:clamp(1.2rem,3vw,1.5rem)}
+.listening{color:#ffca28;text-shadow:0 0 8px #ffca28}
+
+.progress-bar{width:100%;height:clamp(6px,1.5vw,8px);background:rgba(255,255,255,.1);border-radius:clamp(3px,1vw,4px);margin-bottom:clamp(.8rem,2.5vw,1.5rem);overflow:hidden}
+.progress-bar>div{height:100%;background:var(--grad);border-radius:clamp(3px,1vw,4px);transition:width .5s;box-shadow:0 0 10px rgba(0,217,255,.5)}
+</style>
+</head>
+<body>
+
+<div class="intro" id="intro"><div class="intro-logo"></div></div>
+<header class="header"><h1>MAI Academy Jodhpur</h1><div class="logo-small"></div></header>
+
+<div class="start-screen" id="startScreen">
+  <h2>Are you ready?</h2>
+  <div class="glass-card">
+    <button class="preset-btn" onclick="loadDefault()">▶ Use Default Quiz</button>
+    <div class="drop-zone" id="dropZone">📂 Drop JSON file here or click to browse</div>
+    <input type="file" id="jsonFile" accept=".json" style="display:none">
+    <textarea id="jsonPreview" class="json-preview" placeholder="Quiz JSON will appear here…"></textarea>
+    <div id="jsonStatus" style="font-size:clamp(.7rem,2vw,.8rem);margin-top:.25rem"></div>
+  </div>
+  <div class="glass-card switches">
+    <label class="switch-label">Timer<select id="timerSelect"><option value="0">Off</option><option value="15">15 s</option><option value="30" selected>30 s</option><option value="60">60 s</option></select></label>
+    <label class="switch-label">Speaker (TTS)<div class="switch"><input type="checkbox" id="speakerToggle" checked><span class="slider"></span></div></label>
+    <label class="switch-label">Microphone (STT)<div class="switch"><input type="checkbox" id="micToggle" checked><span class="slider"></span></div></label>
+    <label class="switch-label">Use only first<input type="number" id="questionCount" min="1" max="99" placeholder="All" style="width:clamp(60px,10vw,70px);text-align:center"></label>
+  </div>
+  <div class="start-btn-container"><button class="preset-btn" onclick="startQuiz()">Start Quiz</button></div>
+</div>
+
+<div id="quizScreen" style="display:none;width:100%">
+  <div class="progress-bar"><div id="progress"></div></div>
+  <div class="timer-ring">
+    <svg width="130" height="130">
+      <defs><linearGradient id="gradTimer"><stop offset="0%" stop-color="#00d7ff"/><stop offset="100%" stop-color="#0099ff"/></linearGradient></defs>
+      <circle class="bg" cx="65" cy="65" r="57"></circle>
+      <circle class="progress" id="ring" cx="65" cy="65" r="57" stroke-dasharray="358" stroke-dashoffset="0"></circle>
+    </svg>
+    <div class="timer-text" id="timerDigit">30</div>
+  </div>
+  <div class="q-box"><div class="q-text" id="questionText"></div><div id="explanation"></div></div>
+  <div class="options" id="options"></div>
+  <div class="mic-status" id="micStatus"></div>
+</div>
+
+<script>
+const defaultQuiz = [
+  {q:"What is the capital of France?",opt:["London","Berlin","Paris","Madrid"],ans:2,exp:"Paris has been the capital since 987 AD."},
+  {q:"Which planet is the Red Planet?",opt:["Venus","Mars","Jupiter","Saturn"],ans:1,exp:"Iron oxide gives Mars its reddish colour."},
+  {q:"Largest ocean on Earth?",opt:["Atlantic","Indian","Arctic","Pacific"],ans:3,exp:"The Pacific covers 63 million square miles."},
+  {q:"Who painted Mona Lisa?",opt:["Van Gogh","Leonardo da Vinci","Picasso","Michelangelo"],ans:1,exp:"Da Vinci painted it 1503-1519."},
+  {q:"Smallest prime number?",opt:["0","1","2","3"],ans:2,exp:"2 is the smallest and only even prime."}
+];
+let quizData = defaultQuiz;
+
+const jsonPreview=document.getElementById('jsonPreview');
+const jsonStatus=document.getElementById('jsonStatus');
+function tryUpdateQuiz(src){
+  try{
+    const parsed=JSON.parse(src);
+    quizData=parsed;
+    jsonStatus.innerHTML='✅ JSON loaded';
+    jsonStatus.style.color='#00ffcc';
+    return true;
+  }catch(err){
+    jsonStatus.innerHTML='❌ Invalid JSON';
+    jsonStatus.style.color='#ff6b6b';
+    return false;
+  }
+}
+jsonPreview.addEventListener('input',()=>tryUpdateQuiz(jsonPreview.value));
+
+function loadDefault(){quizData=defaultQuiz; jsonPreview.value=JSON.stringify(quizData,null,2); tryUpdateQuiz(jsonPreview.value);}
+loadDefault();
+
+const dropZone=document.getElementById('dropZone');
+const jsonFile=document.getElementById('jsonFile');
+dropZone.addEventListener('click',()=>jsonFile.click());
+dropZone.addEventListener('dragover',e=>{e.preventDefault(); dropZone.classList.add('active');});
+dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('active'));
+dropZone.addEventListener('drop',e=>{
+  e.preventDefault(); dropZone.classList.remove('active');
+  const file=e.dataTransfer.files[0]; if(!file) return;
+  jsonFile.files=e.dataTransfer.files;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const text=ev.target.result;
+    jsonPreview.value=text;
+    tryUpdateQuiz(text);
+  };
+  reader.readAsText(file);
+});
+jsonFile.addEventListener('change',e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const text=ev.target.result;
+    jsonPreview.value=text;
+    tryUpdateQuiz(text);
+  };
+  reader.readAsText(file);
+});
+
+const synth=window.speechSynthesis;
+let utter, rec, listening=false;
+let speakerOn=true, micOn=true, timeLimit=30, timeLeft=30, idx=0, timer;
+
+function speak(text){
+  if(!speakerOn) return Promise.resolve();
+  return new Promise(res=>{
+    synth.cancel();
+    utter=new SpeechSynthesisUtterance(text);
+    utter.rate=0.95; utter.pitch=1.05; utter.volume=1;
+    utter.onend=()=>setTimeout(res,300);
+    synth.speak(utter);
+  });
+}
+function initRec(){
+  if(!micOn) return null;
+  if(!('webkitSpeechRecognition' in window)) return null;
+  const R=new webkitSpeechRecognition();
+  R.lang='en-US'; R.interimResults=false; R.maxAlternatives=1;
+  R.onstart=()=>{listening=true; micStatus.classList.add('listening'); micStatus.textContent='Listening…';};
+  R.onend =()=>{listening=false; micStatus.classList.remove('listening'); micStatus.textContent='';};
+  R.onresult=e=>{
+    const said=e.results[0][0].transcript.trim().toLowerCase();
+    pickByVoice(said);
+  };
+  R.onerror=e=>{if(e.error==='no-speech') R.stop();};
+  return R;
+}
+function pickByVoice(said){
+  const opts=quizData[idx].opt.map(o=>o.toLowerCase());
+  let best=0, bestScore=0;
+  opts.forEach((o,i)=>{
+    const score=o.split(/\s+/).filter(w=>said.includes(w)).length;
+    if(score>bestScore){bestScore=score; best=i;}
+  });
+  if(bestScore>0) selectAnswer(best); else micStatus.textContent="Didn't catch that – try again!";
+}
+
+async function startQuiz(){
+  timeLimit=parseInt(document.getElementById('timerSelect').value);
+  speakerOn=document.getElementById('speakerToggle').checked;
+  micOn=document.getElementById('micToggle').checked;
+  const qc=document.getElementById('questionCount').value;
+  if(qc) quizData=quizData.slice(0,parseInt(qc));
+
+  document.getElementById('startScreen').style.display='none';
+  document.getElementById('quizScreen').style.display='block';
+  rec=initRec();
+  idx=0;
+  loadQuestion();
+}
+async function loadQuestion(){
+  if(idx>=quizData.length){endQuiz();return;}
+  const q=quizData[idx];
+  document.getElementById('questionText').textContent=q.q;
+  document.getElementById('explanation').innerHTML='';
+  buildOptions(q.opt);
+  updateProgress();
+  timeLeft=timeLimit; updateRing(); if(timeLimit>0) timer=setInterval(updateRing,1000);
+  await speak(q.q);
+  if(rec) rec.start();
+}
+function buildOptions(opt){
+  const box=document.getElementById('options');
+  box.innerHTML='';
+  opt.forEach((o,i)=>{
+    const b=document.createElement('button'); b.className='opt-btn'; b.textContent=o;
+    b.onclick=()=>selectAnswer(i);
+    box.appendChild(b);
+  });
+}
+function updateProgress(){
+  document.getElementById('progress').style.width=`${(idx+1)/quizData.length*100}%`;
+}
+function updateRing(){
+  const ring=document.getElementById('ring');
+  const digit=document.getElementById('timerDigit');
+  const max=358, off=max*timeLeft/timeLimit;
+  ring.style.strokeDashoffset=max-off;
+  digit.textContent=timeLeft;
+  digit.classList.toggle('warning',timeLeft<=10);
+  if(timeLeft<=0){clearInterval(timer); disableOpts(); showExplanation(false);}
+  timeLeft--;
+}
+function disableOpts(){
+  document.querySelectorAll('.opt-btn').forEach(b=>b.classList.add('disabled'));
+}
+async function selectAnswer(i){
+  clearInterval(timer);
+  disableOpts();
+  const correct=i===quizData[idx].ans;
+  const btns=document.querySelectorAll('.opt-btn');
+  btns[i].classList.add(correct?'correct':'incorrect');
+  if(!correct) btns[quizData[idx].ans].classList.add('correct');
+  await showExplanation(correct);
+}
+async function showExplanation(correct){
+  const div=document.getElementById('explanation');
+  div.innerHTML=`<div class="${correct?'correct':'incorrect'}">${correct?'✓ Correct! ':'✗ Wrong! '}${quizData[idx].exp}</div>`;
+  await speak(quizData[idx].exp);
+  idx++; setTimeout(loadQuestion,500);
+}
+function endQuiz(){
+  document.getElementById('quizScreen').innerHTML=`
+  <div style="text-align:center;padding:clamp(1rem,4vw,2rem)">
+    <h2 style="font-size:clamp(1.5rem,5vw,2rem)">Quiz complete – great job!</h2>
+    <button class="preset-btn" onclick="location.reload()" style="margin-top:clamp(1rem,4vw,1.5rem)">Restart Quiz</button>
+  </div>`;
+}
+</script>
+</body>
+</html>
